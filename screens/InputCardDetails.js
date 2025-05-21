@@ -33,7 +33,7 @@ export default function InputCardDetailsScreen() {
   const handleCompleteOrderPress = () => {
     console.log("Complete Order pressed");
     // Navigate to the next screen or perform order completion logic
-    navigation.navigate("TrackOrder", {
+    navigation.navigate("OrderComplete", {
       cardHolderName,
       cardNumber,
       expiryDate,

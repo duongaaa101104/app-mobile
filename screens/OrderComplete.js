@@ -122,7 +122,7 @@ export default ({ navigation }) => {
             width: 160, 
             alignItems: "center",
           }}
-          onPress={() => navigation.navigate("Thongtin")}
+          onPress={() => navigation.navigate("TrackOrder")}
         >
           <Text
             style={{
@@ -147,7 +147,7 @@ export default ({ navigation }) => {
             alignItems: "center",
             top:35,
           }}
-          onPress={() => navigation.navigate("Trangchu")}
+          onPress={() => navigation.navigate("HomeScreenOne")}
         >
           <Text
             style={{

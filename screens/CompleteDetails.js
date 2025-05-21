@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   View,
@@ -11,6 +11,15 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { getOrders, saveOrders } from "../utils/orderStorage";
+
+const imageMap = {
+  "assets/anh7.png": require("../assets/anh7.png"),
+  "assets/giohang1.png": require("../assets/giohang1.png"),
+  "assets/giohang2.png": require("../assets/giohang2.png"),
+  "assets/giohang3.png": require("../assets/giohang3.png"),
+  "assets/anh8.png": require("../assets/anh8.png"),
+};
 
 export default function MyBasketScreen() {
   const navigation = useNavigation();
@@ -18,6 +27,47 @@ export default function MyBasketScreen() {
   const [phoneNumber, setPhoneNumber] = useState("09090605708");
   const [showDelivery, setShowDelivery] = useState(true);
   const [renderKey, setRenderKey] = useState(0);
+  const [orders, setOrders] = useState([]);
+
+  // Fetch orders on component mount
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const storedOrders = await getOrders();
+        setOrders(storedOrders || []);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      }
+    };
+    fetchOrders();
+  }, []);
+
+  // Calculate total price
+  const totalPrice = orders.reduce((sum, order) => sum + order.price * order.quantity, 0);
+
+  // Handle item quantity change
+  const handleQuantityChange = async (id, newQuantity) => {
+    const updatedOrders = orders.map((order) =>
+      order.id === id ? { ...order, quantity: newQuantity } : order
+    );
+    setOrders(updatedOrders);
+    try {
+      await saveOrders(updatedOrders);
+    } catch (error) {
+      console.error("Error saving orders:", error);
+    }
+  };
+
+  // Handle item removal
+  const handleRemoveItem = async (id) => {
+    const updatedOrders = orders.filter((order) => order.id !== id);
+    setOrders(updatedOrders);
+    try {
+      await saveOrders(updatedOrders);
+    } catch (error) {
+      console.error("Error saving orders:", error);
+    }
+  };
 
   const handleCancelPress = () => {
     console.log("Cancel pressed, hiding delivery section");
@@ -43,8 +93,8 @@ export default function MyBasketScreen() {
             flex: 1,
             backgroundColor: "#FFA451",
             borderRadius: 30,
-            marginBottom: -100,
           }}
+          contentContainerStyle={{ paddingBottom: 100 }} // Add padding to avoid overlap with footer
         >
           {/* Header Section */}
           <View
@@ -82,7 +132,7 @@ export default function MyBasketScreen() {
                 paddingRight: 10,
                 marginRight: 34,
               }}
-              onPress={() => navigation.navigate('OrderList')}
+              onPress={() => navigation.navigate("HomeScreenOne")}
             >
               <Image
                 source={require("../assets/Vector.png")}
@@ -96,137 +146,98 @@ export default function MyBasketScreen() {
           </View>
 
           {/* Basket Items Section */}
-          <View style={{ backgroundColor: "#FFFFFF", paddingVertical: 77, opacity: showDelivery ? 0.5 : 1 }}>
-            {/* Item 1 */}
-            <View style={{ flexDirection: "row", alignItems: "flex-start", paddingHorizontal: 24 }}>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "#F1EFF6",
-                  borderRadius: 10,
-                  paddingVertical: 12,
-                  paddingHorizontal: 13,
-                  marginRight: 16,
-                }}
-                onPress={() => alert("Pressed!")}
-              >
-                <Image source={require("../assets/anh7.png")} resizeMode="stretch" style={{ width: 40, height: 40 }} />
-              </TouchableOpacity>
+          <View style={{ backgroundColor: "#FFFFFF", paddingVertical: 20, opacity: showDelivery ? 0.5 : 1 }}>
+            {orders.map((order) => (
+              <View key={order.id}>
+                <View style={{ flexDirection: "row", alignItems: "flex-start", paddingHorizontal: 24 }}>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: "#F1EFF6",
+                      borderRadius: 10,
+                      paddingVertical: 12,
+                      paddingHorizontal: 13,
+                      marginRight: 16,
+                    }}
+                    onPress={() => alert("Pressed!")}
+                  >
+                    <Image
+                      source={imageMap[order.image]}
+                      resizeMode="stretch"
+                      style={{ width: 40, height: 40 }}
+                    />
+                  </TouchableOpacity>
 
-              <View style={{ flex: 1, marginTop: 9, marginRight: 12 }}>
-                <Text style={{ color: "#000000", fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>
-                  Quinoa fruit salad
-                </Text>
-                <Text style={{ color: "#000000", fontSize: 14 }}>2packs</Text>
-              </View>
+                  <View style={{ flex: 1, marginTop: 9, marginRight: 12 }}>
+                    <Text style={{ color: "#000000", fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>
+                     {order.name}
+                    </Text>
 
-              <View style={{ flexDirection: "row", alignItems: "center", paddingRight: 3, marginTop: 21 }}>
-                <Image
-                  source={require("../assets/iconchuN.png")}
-                  resizeMode="stretch"
-                  style={{ width: 16, height: 12, marginRight: 4 }}
-                />
-                <Text style={{ color: "#27214D", fontSize: 16, fontWeight: "bold" }}>20,000</Text>
-              </View>
-            </View>
-
-            <View style={{ height: 1, backgroundColor: "#F4F4F4", marginBottom: 31 }} />
-
-            {/* Item 2 */}
-            <View style={{ flexDirection: "row", alignItems: "flex-start", paddingHorizontal: 24 }}>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "#F1EFF6",
-                  borderRadius: 10,
-                  paddingVertical: 20,
-                  paddingHorizontal: 12,
-                  marginRight: 16,
-                }}
-                onPress={() => alert("Pressed!")}
-              >
-                <Image source={require("../assets/anh8.png")} resizeMode="stretch" style={{ width: 40, height: 24 }} />
-              </TouchableOpacity>
-
-              <View style={{ flex: 1, marginTop: 9, marginRight: 12 }}>
-                <Text style={{ color: "#000000", fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>
-                  Melon fruit salad
-                </Text>
-                <Text style={{ color: "#000000", fontSize: 14 }}>2packs</Text>
-              </View>
-
-              <View style={{ flexDirection: "row", alignItems: "center", paddingRight: 3, marginTop: 21 }}>
-                <Image
-                  source={require("../assets/iconchuN.png")}
-                  resizeMode="stretch"
-                  style={{ width: 16, height: 12, marginRight: 4 }}
-                />
-                <Text style={{ color: "#27214D", fontSize: 16, fontWeight: "bold" }}>20,000</Text>
-              </View>
-            </View>
-
-            <View style={{ height: 1, backgroundColor: "#F4F4F4", marginBottom: 31 }} />
-
-            {/* Item 3 */}
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 237, marginHorizontal: 24 }}>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: "#FEF0F0",
-                  borderRadius: 10,
-                  paddingVertical: 19,
-                  paddingHorizontal: 9,
-                  marginRight: 16,
-                }}
-                onPress={() => alert("Pressed!")}
-              >
-                <Image source={require("../assets/anh9.png")} resizeMode="stretch" style={{ width: 48, height: 25 }} />
-              </TouchableOpacity>
-
-              <View style={{ flex: 1, marginRight: 12 }}>
-                <Text style={{ color: "#000000", fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>
-                  Tropical fruit salad
-                </Text>
-                <Text style={{ color: "#000000", fontSize: 14 }}>2packs</Text>
-              </View>
-
-              <View style={{ flexDirection: "row", alignItems: "center", paddingRight: 3 }}>
-                <Image
-                  source={require("../assets/iconchuN.png")}
-                  resizeMode="stretch"
-                  style={{ width: 16, height: 12, marginRight: 4 }}
-                />
-                <Text style={{ color: "#27214D", fontSize: 16, fontWeight: "bold" }}>20,000</Text>
-              </View>
-            </View>
-
-            {/* Total & Checkout */}
-            <View style={{ flexDirection: "row", alignItems: "flex-start", marginHorizontal: 25 }}>
-              <View style={{ alignItems: "flex-start", marginRight: 24 }}>
-                <Text style={{ color: "#000000", fontSize: 16, fontWeight: "bold" }}>Total</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", paddingRight: 3 }}>
-                  <Image
-                    source={require("../assets/iconchuN.png")}
-                    resizeMode="stretch"
-                    style={{ width: 20, height: 16, marginRight: 5 }}
-                  />
-                  <Text style={{ color: "#27214D", fontSize: 24, fontWeight: "bold" }}>60,000</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <Text style={{ color: "#000000", fontSize: 14 }}>{order.quantity} packs</Text>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center", paddingRight: 3, marginTop: 21 }}>
+                    <Image
+                      source={require("../assets/iconchuN.png")}
+                      resizeMode="stretch"
+                      style={{ width: 16, height: 12, marginRight: 4 }}
+                    />
+                    <Text style={{ color: "#27214D", fontSize: 16, fontWeight: "bold" }}>
+                      {order.price * order.quantity}
+                    </Text>
+                  </View>
                 </View>
+                <View style={{ height: 1, backgroundColor: "#F4F4F4", marginVertical: 20 }} />
               </View>
-
-              <TouchableOpacity
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  backgroundColor: "#FFA451",
-                  borderRadius: 15,
-                  paddingVertical: 25,
-                  zIndex: 10,
-                }}
-                onPress={handleCheckoutPress}
-              >
-                <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>Checkout</Text>
-              </TouchableOpacity>
-            </View>
+            ))}
           </View>
         </ScrollView>
+
+        {/* Fixed Total & Checkout Footer */}
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "#FFFFFF",
+            paddingHorizontal: 25,
+            paddingVertical: 15,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderTopWidth: 1,
+            borderTopColor: "#F4F4F4",
+            zIndex: 10,
+            opacity: showDelivery ? 0.5 : 1,
+          }}
+        >
+          <View style={{ alignItems: "flex-start" }}>
+            <Text style={{ color: "#000000", fontSize: 16, fontWeight: "bold" }}>Total</Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Image
+                source={require("../assets/iconchuN.png")}
+                resizeMode="stretch"
+                style={{ width: 20, height: 16, marginRight: 5 }}
+              />
+              <Text style={{ color: "#27214D", fontSize: 24, fontWeight: "bold" }}>{totalPrice}</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              alignItems: "center",
+              backgroundColor: "#FFA451",
+              borderRadius: 15,
+              paddingVertical: 15,
+              marginLeft: 20,
+            }}
+            onPress={handleCheckoutPress}
+          >
+            <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>Checkout</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Delivery Modal */}
         {showDelivery && (
@@ -299,7 +310,7 @@ export default function MyBasketScreen() {
                     style={{
                       borderWidth: 1,
                       borderColor: "#F3F1F1",
-                      backgroundColor:"#F3F1F1",
+                      backgroundColor: "#F3F1F1",
                       borderRadius: 10,
                       padding: 20,
                       marginBottom: 15,
@@ -334,7 +345,7 @@ export default function MyBasketScreen() {
                       fontSize: 16,
                       color: "#C2BDBD",
                       width: "100%",
-                      backgroundColor:"#F3F1F1"
+                      backgroundColor: "#F3F1F1",
                     }}
                     autoCapitalize="none"
                     returnKeyType="done"
@@ -347,7 +358,13 @@ export default function MyBasketScreen() {
                     }}
                   >
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('InputCardDetails', { paymentMethod: "Pay on delivery", address, phoneNumber })}
+                      onPress={() =>
+                        navigation.navigate("InputCardDetails", {
+                          paymentMethod: "Pay on delivery",
+                          address,
+                          phoneNumber,
+                        })
+                      }
                       style={{
                         backgroundColor: "#FFFFFF",
                         paddingVertical: 20,
@@ -372,7 +389,7 @@ export default function MyBasketScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('inputcard')}
+                      onPress={() => navigation.navigate("InputCardDetails")}
                       style={{
                         backgroundColor: "#FFFFFF",
                         paddingVertical: 20,

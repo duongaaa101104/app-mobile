@@ -104,7 +104,7 @@ export default () => {
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
-                navigation.navigate("Home");
+                navigation.navigate("HomeScreenOne");
                 closeMenu();
               }}
             >
